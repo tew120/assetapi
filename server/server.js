@@ -50,6 +50,23 @@ app.get('/assets/:id', (req, res) => {
 
 }); 
 
+app.delete('/assets/:id', (req, res) =>{
+	var id = req.params.id;
+	if (!ObjectID.isValid(id)) {
+		return res.status(404).send();
+	}
+
+	Asset.findByIdAndRemove(id).then((asset) => {
+		if (!asset) {
+			return res.status(404).send();
+		} 
+		res.send({asset});
+	}).catch((e) => {
+		res.status(400).send();
+	});
+
+});
+
 
 
 app.listen(port, () => {
