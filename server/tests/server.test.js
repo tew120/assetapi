@@ -11,7 +11,10 @@ const assets = [{
 	title: 'First test asset'
 }, {
 	_id: new ObjectID(),
-	title: 'Second test asset'
+	title: 'Second test asset',
+	available: true,
+	published: 22211
+
 }];
 
 
@@ -133,16 +136,52 @@ describe ('Delete /asset/:id', () => {
 	    var hexId = new ObjectID().toHexString();
 
 	    request(app)
-	      .delete(`/todos/${hexId}`)
+	      .delete(`/assets/${hexId}`)
 	      .expect(404)
 	      .end(done);
 	  });
 
 	it('should return 404 if object id is invalid', (done) => {
 	    request(app)
-	      .delete('/todos/123abc')
+	      .delete('/assets/123abc')
 	      .expect(404)
 	      .end(done);
+	});
+});
+
+describe ('PATCH /asset/:id', () => {
+	it('should update the asset', (done) => {
+		var hexId = assets[0]._id.toHexString();
+		var text = 'This should be the new title';
+		request(app)
+			.patch(`/assets/${hexId}`)
+			.send({title: text, available: true}) 
+			.expect(200)
+			.expect((res) => {
+				expect(res.body.asset.title).toBe(text);
+				expect(res.body.asset.available).toBe(true);
+				expect(res.body.asset.published).toBeA('number');
+		
+			})
+			.end(done);
+
+
+	});
+
+	it('should clear published when asset is not available', (done) => {
+		var hexId = assets[1]._id.toHexString();
+		var text = 'This should be the new title2';
+		request(app)
+			.patch(`/assets/${hexId}`)
+			.send({title: text, available: false}) 
+			.expect(200)
+			.expect((res) => {
+				expect(res.body.asset.title).toBe(text);
+				expect(res.body.asset.available).toBe(false);
+				expect(res.body.asset.published).toNotExist;
+		
+			})
+			.end(done);
 	});
 });
 
