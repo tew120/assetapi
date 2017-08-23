@@ -1,6 +1,7 @@
-var express = require('express');
-var bodyParser = require('body-parser');
-var {ObjectID} = require('mongodb');
+const _ = require('lodash');
+const express = require('express');
+const bodyParser = require('body-parser');
+const {ObjectID} = require('mongodb');
 
 var {mongoose} = require('./db/mongoose');
 var {Asset} = require('./models/asset');
@@ -67,6 +68,37 @@ app.delete('/assets/:id', (req, res) =>{
 
 });
 
+app.patch('/assets/:id', (req, res) => {
+	var id = req.params.id;
+	// properties that can be updated
+	var body = _.pick(req.body, ['title', 'available']);
+	if (!ObjectID.isValid(id)) {
+		return res.status(404).send();
+	}
+
+	if (_.isBoolean(body.available) && body.available) {
+		body.published = new Date().getTime();
+		console.log("Updating body");
+	} else {
+		console.log("Not Updating body");
+		body.available = false;
+		// Remove value from db:
+
+		body.published = null;
+	}
+
+	Asset.findByIdAndUpdate(id, {$set: body}, {new: true}).then((asset) => {
+		if (!asset) {
+			return res.status(404).send();
+		}
+		res.send({asset});
+
+	}).catch((e) => {
+		res.status(400).send();
+	});
+
+});
+
 
 
 app.listen(port, () => {
@@ -78,6 +110,7 @@ app.listen(port, () => {
 
 
 module.exports = {app}; 
+
 
 
 
